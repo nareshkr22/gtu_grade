@@ -86,3 +86,14 @@ for i in range(0,8,2):
 print info_table
 
 
+## Backlog Table
+
+bck_sem_info = all_data[5].findAll('th')
+bck_info = all_data[5].findAll('td')
+
+bck_table= PrettyTable(['++++','++'])
+
+for n,i in enumerate(bck_sem_info): 
+        bck_table.add_row([bck_sem_info[n].get_text(),bck_info[n].get_text() ])
+
+print bck_table

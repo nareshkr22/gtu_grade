@@ -6,6 +6,8 @@ import mechanize
 from PIL import Image
 
 
+
+enroll = int(raw_input("Enter The enrollment no : "))
 br = mechanize.Browser()
 uri = 'http://students.gtu.ac.in/StudHist.aspx'
 
@@ -51,7 +53,7 @@ formFields = (
    #criteria the collections to search from etc.
                                                       # Check boxes  
    (r'ctl00$MainContent$btnSubmit', 'Submit'),  # file number
-   (r'ctl00$MainContent$txtEnrollNo', '130750116023'),  # file number
+   (r'ctl00$MainContent$txtEnrollNo', enroll),  # file number
    (r'ctl00$MainContent$CodeNumberTextBox', cap_val),  # Legislative text
    
 )
@@ -70,15 +72,14 @@ f= urllib2.urlopen(req)     #that's the actual call to the http site.
  
 soup = BeautifulSoup(f,"lxml")
 all_data = soup.find_all("table")
-
-
-if len(all_data) == 3:
-  print "Sorry Incorrect Enroll No"
-  exit()
+ 
+if len(all_data) == 4:
+  print "Sorry  Something went wrong"
+  quit()
 
 
 ## Information Table
- info_data = all_data[4].findAll('td') 
+info_data = all_data[4].findAll('td') 
 info_table= PrettyTable(['++++','Student Detail'])
 for i in range(0,8,2):
   info_table.add_row([info_data[i].get_text().strip(),info_data[i+1].get_text().strip()])
@@ -91,9 +92,55 @@ print info_table
 bck_sem_info = all_data[5].findAll('th')
 bck_info = all_data[5].findAll('td')
 
-bck_table= PrettyTable(['++++','++'])
+bck_table= PrettyTable()
 
 for n,i in enumerate(bck_sem_info): 
-        bck_table.add_row([bck_sem_info[n].get_text(),bck_info[n].get_text() ])
-
+        bck_table.add_column(bck_sem_info[n].get_text(),[bck_info[n].get_text()])
+       
 print bck_table
+
+
+## Sem Info
+sem = soup.find_all("table", { "class" : "mrksheet Mytable" })
+
+
+sem_val = int(raw_input("Enter the semster"))
+if sem_val > len(sem)+1:
+  print "Sorrry"
+  quit()
+else:  
+  next_child = sem[sem_val-1].find_next_sibling("table")
+  #print next_child 
+  print "sem = " + str(sem_val)
+  try :
+      while next_child.get('class',[])[0] != "mrksheet":  
+          if next_child.get('class',[])[0] == "mrksheet":
+              break
+          else:        
+              
+              sem_info = next_child.findAll('tr') 
+              
+              sem_headers = next_child.findAll('th')         
+              sem_headers = [j.get_text().strip() for j in sem_headers]
+              
+              sem_info = next_child.findAll('td') 
+              sem_info = [j.get_text().strip() for j in sem_info]
+              
+              if next_child.get('class',[])[0] == "Session":
+                  print "Examination Type" 
+                  for i in sem_info: print i.strip()
+          
+              if next_child.get('class',[])[0] == "mrksheetdetail":
+                  sem_t = PrettyTable(sem_headers)
+                  size = len(sem_info)/len(sem_headers)
+                  o = 0
+                  p = len(sem_headers)
+                  while p <= len(sem_info):               
+                      sem_t.add_row(sem_info[o:p])
+                      o = o+ len(sem_headers)
+                      p = p+ len(sem_headers)
+                  print sem_t
+              next_child = next_child.find_next_sibling("table")
+  except:
+          print "Thank You very Much for using the program"
+  
